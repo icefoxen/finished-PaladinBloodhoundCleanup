@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
-namespace PaladinDataCleanup
+namespace PaladinBloodhoundCleanup
 {
 	/// <summary>
 	/// This class holds a single depth measurement including:
@@ -51,6 +52,11 @@ namespace PaladinDataCleanup
 			Gamma = gamma;
 		}
 
+		public override string ToString()
+		{
+			return String.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}", Depth, ROP, TG, C1, C2, C3, C4, Gamma);
+		}
+
 		/// <summary>
 		/// Compares whether two Measurements have identical depth.
 		/// </summary>
@@ -80,7 +86,7 @@ namespace PaladinDataCleanup
 	/// </summary>
 	public class WorkingSet
 	{
-		List<Measurement> Data;
+		public List<Measurement> Data { get; set; }
 
 		public WorkingSet()
 		{
@@ -104,7 +110,7 @@ namespace PaladinDataCleanup
 		/// It leaves behind the first measurement at a given depth
 		/// and removes the rest up to the next higher depth.
 		/// 
-		/// It's probably not all that efficient or clever but works
+		/// It's not all that efficient or clever but works
 		/// and is consistent.
 		/// </summary>
 		public void RemoveDuplicates()
@@ -114,15 +120,63 @@ namespace PaladinDataCleanup
 				var dNext = Data[i + 1].Depth;
 
 				while(d >= dNext) {
+					//Console.WriteLine("Removing item at index {0}, depth {1} >= {2}", i + 1, d, dNext);
 					Data.RemoveAt(i + 1);
-					if(Data.Count < i) {
+					if(Data.Count > i) {
+						//var old = dNext;
 						dNext = Data[i + 1].Depth;
+						//Console.WriteLine("dNext is now {0}, was {1}", dNext, old);
 					} else {
 						// We've removed the last item in the list, stop.
 						break;
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Removes gaps in measurements by duplicating the previous measurement.
+		/// Should probably be run after RemoveDuplicates() otherwise duplicates
+		/// will potentially confuse it.  Trim() is also a good idea.
+		/// </summary>
+		public void RemoveGaps()
+		{
+			for(int i = 0; i < Data.Count-1; i++) {
+				var d = Data[i].Depth;
+				var dNext = Data[i + 1].Depth;
+				var m = Data[i];	
+
+				if(dNext != d + 1) {
+					Console.WriteLine("Closing gap at {0}, next was {1}", d, dNext);
+					var mNew = new Measurement(m.Depth + 1, m.ROP, m.TG, m.C1, m.C2, m.C3, m.C4, m.Gamma);
+					Data.Insert(i + 1, mNew);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Trims the range of depths to the given bounds.
+		/// </summary>
+		/// <param name="minD">Minimum depth.</param>
+		/// <param name="maxD">Max depth.</param>
+		public void Trim(int minD, int maxD)
+		{
+			int minIndex, maxIndex;
+
+			minIndex = Data.FindIndex(x => x.Depth >= minD);
+			maxIndex = Data.FindLastIndex(x => x.Depth <= maxD);
+
+			Data = Data.GetRange(minIndex, maxIndex - minIndex);
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append("Depth\tROP\tTG\tC1\tC2\tC3\tC4\tGamma\n");
+			foreach(var m in Data) {
+				sb.AppendLine(m.ToString());
+			}
+			return sb.ToString();
 		}
 	}
 }
