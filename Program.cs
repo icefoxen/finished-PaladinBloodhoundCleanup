@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.FileIO;
 
-namespace PaladinDataCleanup
+namespace PaladinBloodhoundCleanup
 {
 	class MainClass : Form
 	{

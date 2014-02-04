@@ -84,7 +84,7 @@ namespace PaladinDataCleanup
 
 		public WorkingSet()
 		{
-			Data = new ListM<Measurement>();
+			Data = new List<Measurement>();
 		}
 
 		public void AddMeasurement(Measurement m)
